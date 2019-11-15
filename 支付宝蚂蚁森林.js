@@ -1,8 +1,8 @@
 
 auto();
-requestScreenCapture();
+prepareThings()
 //解锁
-unlock("1111");//里面是你的锁屏密码，仅支持数字解锁，并且需要点击确定键，需要点击确定键的需要自己改一下解锁函数
+//unlock("1111");//里面是你的锁屏密码，仅支持数字解锁，并且需要点击确定键，需要点击确定键的需要自己改一下解锁函数
 home()
 threads.start(function(){
     toast("按音量下键停止脚本")
@@ -27,22 +27,22 @@ if(zfb)
 	click(b.centerX(),b.centerY())	
 }
 waitForActivity("com.eg.android.AlipayGphone.AlipayLogin");
+
 toastLog("启动成功")
+text("蚂蚁森林").waitFor();
 var w=text("蚂蚁森林").className("android.widget.TextView").findOne();
 var b=w.bounds();
 if(w==null){
     log("null");
 }
 //点击蚂蚁森林
-if(click(b.centerX(),b.centerY())){    
-    log("点击成功");
-}else{
-    log("点击失败");
-}
+click(b.centerX(),b.centerY())
 
- setScreenMetrics(1080, 2160);
+
 //收集自己的能量
-sleep(2000);
+//sleep(3000);
+text("种树").waitFor();
+sleep(500);
 if(collectEnergy())
 	toastLog("自己能量收集完成");
 else
@@ -60,9 +60,11 @@ back();
 sleep(1000);
 back();
 sleep(1000);
-
+home();
+//launchApp("Auto.js");
+desc("Auto.js").findOne().click();
 //关闭应用，仅有root权限下有用
-shell("am force-stop com.eg.android.AlipayGphone",true);
+//shell("am force-stop com.eg.android.AlipayGphone",true);
 
 exit();
 
@@ -78,30 +80,48 @@ function unlock(password){
 	    	sleep(400); 
 	    //点击时间 
 	    click(100, 120);
-
 	    //解锁 密码1111
 	    desc(1).findOne().click(); 
 	    desc(1).findOne().click(); 
 	    desc(1).findOne().click(); 
 	    desc(1).findOne().click(); 
+
 	    //等待解锁完成，返回并退出
 	toast("解锁成功");
 	sleep(1000)
 	}
 }
-
+/**
+ * 获取权限和设置参数
+ */
+function prepareThings(){
+    setScreenMetrics(1080, 2160);
+    //请求截图
+   if(!requestScreenCapture()){
+        log("请求截图失败");
+        exit();
+    }    
+}
 // 收能量
 function collectEnergy(){
-	var ob = className('android.widget.Button').depth('14').textStartsWith("收集能量").find();
-	if (!ob.empty()) {
-		toastLog(ob.length + "个能量可收集");
-		ob.forEach(function(currentValue, index) {
-			let a = currentValue.bounds();
-		click(a.centerX(), a.centerY())});   // 收集能量
+    className('android.widget.Button').depth('14').clickable().waitFor();
+    sleep(500)
+var all = className('android.widget.Button').depth('14').textStartsWith("收集能量").find();
+//var all = className('android.widget.Button').depth('14').clickable().find();
+
+	if (!all.empty()) {
+//		toastLog(ob.length + "个能量可收集");
+all.forEach(function(current) {
+    //if(current.textContains("收集能量") || current.text()=="")
+    current.click()    });
+	//		let a = current.bounds();
+//		click(a.centerX(), a.centerY())});   // 收集能量
 		return true;
 			}
 	else
-		return false;
+	{
+    	return false;
+    }
 }
 
 //找好友的能量
@@ -111,84 +131,76 @@ function findFriendEnergy(){
     //toastLog("开始找色");
     //var point = findColor(img, "#1DA06D");
     //var point = findColorInRegion(img,"#1DA06D", 0, 0, device.width,device.height-300);
-	var point = images.findMultiColors(img, "#1da06d",[[40, 45, "#ffffff"], [38,34, "#ffffff"], [54,11, "#1da06d"]], {
+    	var point = images.findMultiColors(img, "#1da06d",[[40, 45, "#ffffff"], [38,34, "#ffffff"], [54,11, "#1da06d"]], {
             region: [1000,200],
-			 threshold: 1
+			 threshold:4
         });
     if(point){
        //toastLog("x = " + point.x + ", y = " + point.y);
        //点击进去偷能量
-       click(point.x,point.y+50);
+       click(point.x,point.y+30);
        return true;
     }else{
-       toastLog("没找到");
+       //toastLog("没有能量");
        return false;
     }
 }
 
 
 //滑动屏幕找到更多好友
-function swipeScreenFirst(){    
-    //gesture(1000,[500,1500],[500,500])
-    swipe(500,1600,500,500,500);
-    var i=5;
-    while(true){
-        if(className("android.view.View").depth(13).indexInParent(5).clickable().exists()){
-			className("android.view.View").depth(13).indexInParent(5).clickable().find().click();
-			//desc("查看更多好友").findOne().click();
-			sleep(2000);
-			break;
-        }
-        swipe(500,1700,500,1000,500);
-        if(i==0){
-            toastLog("没有找到更多好友");
-            sleep(2000)
+function enter_friend(){    
+    for(var i=0;i<5;i++)
+    {
+        swipe(500,1600,500,700,500);
+        if(textContains("查看更多好友").exists())
+        {
+            textContains("查看更多好友").find().click();
+            sleep(1000);
+            return;
+            }
+     }
+     toastLog("没有找到更多好友");
+            sleep(1000)
             back();
-            sleep(2000);
-            //关闭应用，仅有root权限下有用
-            shell("am force-stop com.eg.android.AlipayGphone",true);
+            sleep(1000);
             exit();
-        }        
-        i--;
-    }
-    
-}
+ }
+        
+   // var i=5;
+   // while(true){
+      //  if(className("android.view.View").depth(13).indexInParent(5).clickable().exists()){
+	//		className("android.view.View").depth(13).indexInParent(4).clickable().findOne().click();
+			//desc("查看更多好友").findOne().click();
+//textContains("查看更多好友").find().click();
+//			sleep(1000);
+	//		break;
 
-
-//滑动屏幕
-function swipeScreen(){
-    //滑动一个好友的距离
-    //gesture(1000,[500,1500],[500,500])
-    swipe(500,1800,500,500,500);
-    
-}
 
 //偷好友能量
 function stealEnergy(){
     //滑动屏幕，找到查看更多好友进入到好友排行榜
-    swipeScreenFirst();
+    enter_friend();
     sleep(800);
     	
-   //一个一个偷能量
+   //偷能量
    var should_exit = false;
     while(!should_exit){
         if(findFriendEnergy()){
-            sleep(1000);
+            //sleep(2000);
             collectEnergy();
+            sleep(1000)
             back();
-            sleep(1000);
-            swipeScreen();
-        }else{
-			//var w=text("蚂蚁森林").className("android.widget.TextView").findOne();
-			//var b=w.bounds();
+            sleep(1500);
+        }
+        else{
 			if(text("没有更多了").exists())
 			{
 				should_exit = true;
 			}				
 			else
 			{
-				swipeScreen();
-				sleep(800);					
+swipe(500,1800,500,700,500);
+				sleep(1000);					
 			}
         }
         
